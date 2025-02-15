@@ -37,5 +37,5 @@ TScriptInterface<IMqttClientInterface> UMqttUtilitiesBPL::CreateMqttClient(FMqtt
 	
 #endif
 
-	return nullptr;
+	//return nullptr;
 }
