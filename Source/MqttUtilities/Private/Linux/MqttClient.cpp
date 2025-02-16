@@ -61,7 +61,6 @@ void UMqttClient::Disconnect(const FOnDisconnectDelegate& onDisconnectCallback)
 	}
 
 	Task = nullptr;
-	Thread->Kill();
 }
 
 void UMqttClient::Subscribe(FString topic, int qos)

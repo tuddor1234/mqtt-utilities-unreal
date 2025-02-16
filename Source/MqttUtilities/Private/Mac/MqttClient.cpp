@@ -3,9 +3,8 @@
 #include "MqttClient.h"
 #include "MqttRunnable.h"
 #include "MqttTask.h"
-#include "Utils/StringUtils.h"
-#include "GenericPlatform/GenericPlatformAffinity.h"
 #include "HAL/RunnableThread.h"
+#include "Utils/StringUtils.h"
 
 void UMqttClient::BeginDestroy()
 {
@@ -32,14 +31,14 @@ void UMqttClient::Connect(FMqttConnectionData connectionData, const FOnConnectDe
 		UE_LOG(LogTemp, Warning, TEXT("MQTT => Client ID is not set. Connection cancelled."));
 		return;
 	}
-	
+
 	/** 
 	 * All communication between client and broker should be done in a separate thread.
 	 * Runnable task stores thread-safe queue for output messages (subscribe, unsubscribe, publish)
 	 * and receives broker responsen that are redirected to client.
 	*/
-
-	Task = new FMqttRunnable(this);
+	
+	Task = new FMqttRunnable(this, ClientConfig.EventLoopDeltaMs);
 
 	Task->Host = std::string(TCHAR_TO_ANSI(*ClientConfig.HostUrl));	
 	Task->ClientId = std::string(TCHAR_TO_ANSI(*ClientConfig.ClientId));
@@ -48,7 +47,7 @@ void UMqttClient::Connect(FMqttConnectionData connectionData, const FOnConnectDe
 	Task->Username = std::string(TCHAR_TO_ANSI(*connectionData.Login));
 	Task->Password = std::string(TCHAR_TO_ANSI(*connectionData.Password));
 
-	Thread = FRunnableThread::Create(Task, TEXT("MQTT"), 0, EThreadPriority::TPri_Normal, FGenericPlatformAffinity::GetNoAffinityMask());
+	Thread = FRunnableThread::Create(Task, TEXT("MQTT-Test"), 0, TPri_Normal, FGenericPlatformAffinity::GetNoAffinityMask());
 }
 
 void UMqttClient::Disconnect(const FOnDisconnectDelegate& onDisconnectCallback)
@@ -61,7 +60,6 @@ void UMqttClient::Disconnect(const FOnDisconnectDelegate& onDisconnectCallback)
 	}
 
 	Task = nullptr;
-	Thread->Kill();
 }
 
 void UMqttClient::Subscribe(FString topic, int qos)
