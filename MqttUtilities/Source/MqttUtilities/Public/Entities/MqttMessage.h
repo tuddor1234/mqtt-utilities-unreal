@@ -23,9 +23,9 @@ struct MQTTUTILITIES_API FMqttMessage
 
 	/** Retain flag. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MQTT")
-	bool Retain;
+	bool Retain = true;
 
 	/** Quality of signal. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MQTT")
-	int Qos;
+	int Qos  = 0;
 };

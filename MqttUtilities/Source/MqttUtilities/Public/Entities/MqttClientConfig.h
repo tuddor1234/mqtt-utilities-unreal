@@ -15,7 +15,7 @@ struct MQTTUTILITIES_API FMqttClientConfig
 
 	/** Host port. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MQTT")
-	int Port;
+	int Port = 1883;
 
     /** Unique client identifier. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MQTT")
