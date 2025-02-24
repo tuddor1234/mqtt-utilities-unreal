@@ -16,34 +16,34 @@ public:
 	virtual ~UMqttClientBase();
 
 	UFUNCTION(BlueprintCallable, Category = "MQTT")
-	void Connect(FMqttConnectionData connectionData, const FOnConnectDelegate& onConnectCallback) override;
+	virtual void Connect(FMqttConnectionData connectionData, const FOnConnectDelegate& onConnectCallback) override;
 
 	UFUNCTION(BlueprintCallable, Category = "MQTT")
-	void Disconnect(const FOnDisconnectDelegate& onDisconnectCallback) override;
+	virtual void Disconnect(const FOnDisconnectDelegate& onDisconnectCallback) override;
 
 	UFUNCTION(BlueprintCallable, Category = "MQTT")
-	void Subscribe(FString topic, int qos) override;
+	virtual void Subscribe(FString topic, int qos) override;
 
 	UFUNCTION(BlueprintCallable, Category = "MQTT")
-	void Unsubscribe(FString topic) override;
+	virtual void Unsubscribe(FString topic) override;
 
 	UFUNCTION(BlueprintCallable, Category = "MQTT")
-	void Publish(FMqttMessage message) override;
+	virtual void Publish(FMqttMessage message) override;
 
 	UFUNCTION(BlueprintCallable, Category = "MQTT")
-	void SetOnPublishHandler(const FOnPublishDelegate& onPublishCallback) override;
+	virtual void SetOnPublishHandler(const FOnPublishDelegate& onPublishCallback) override;
 
 	UFUNCTION(BlueprintCallable, Category = "MQTT")
-	void SetOnMessageHandler(const FOnMessageDelegate& onMessageCallback) override;
+	virtual void SetOnMessageHandler(const FOnMessageDelegate& onMessageCallback) override;
 
 	UFUNCTION(BlueprintCallable, Category = "MQTT")
-	void SetOnSubscribeHandler(const FOnSubscribeDelegate& onSubscribeCallback) override;
+	virtual void SetOnSubscribeHandler(const FOnSubscribeDelegate& onSubscribeCallback) override;
 
 	UFUNCTION(BlueprintCallable, Category = "MQTT")
-	void SetOnUnsubscribeHandler(const FOnUnsubscribeDelegate& onUnsubscribeCallback) override;
+	virtual void SetOnUnsubscribeHandler(const FOnUnsubscribeDelegate& onUnsubscribeCallback) override;
 
 	UFUNCTION(BlueprintCallable, Category = "MQTT")
-	void SetOnErrorHandler(const FOnMqttErrorDelegate& onErrorCallback) override;
+	virtual void SetOnErrorHandler(const FOnMqttErrorDelegate& onErrorCallback) override;
 
 public:
 

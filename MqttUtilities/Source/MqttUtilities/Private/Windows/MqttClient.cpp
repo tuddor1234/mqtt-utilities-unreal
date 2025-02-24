@@ -40,7 +40,7 @@ void UMqttClient::Connect(FMqttConnectionData connectionData, const FOnConnectDe
 	 * and receives broker response that are redirected to client.
 	*/
 
-	Task = new FMqttRunnable(this);
+	Task = new FMqttRunnable(this, ClientConfig.EventLoopDeltaMs);
 
 	Task->Host = std::string(TCHAR_TO_ANSI(*ClientConfig.HostUrl));
 	Task->ClientId = std::string(TCHAR_TO_ANSI(*ClientConfig.ClientId));
@@ -63,6 +63,7 @@ void UMqttClient::Disconnect(const FOnDisconnectDelegate& onDisconnectCallback)
 	}
 
 	Task = nullptr;
+	Thread->Kill();
 }
 
 void UMqttClient::Subscribe(FString topic, int qos)

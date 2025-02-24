@@ -13,15 +13,19 @@ struct MQTTUTILITIES_API FMqttMessage
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MQTT")
 	FString Message;
 
+	/** Message content buffer. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MQTT")
+	TArray<uint8> MessageBuffer;
+
 	/** Message topic. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MQTT")
 	FString Topic;
 
 	/** Retain flag. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MQTT")
-	bool Retain;
+	bool Retain = false;
 
 	/** Quality of signal. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MQTT")
-	int Qos;
+	int Qos  = 0;
 };

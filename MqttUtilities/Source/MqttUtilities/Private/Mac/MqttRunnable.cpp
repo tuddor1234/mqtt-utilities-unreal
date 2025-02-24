@@ -10,11 +10,11 @@
 #include "MqttUtilitiesSettings.h"
 #include "MqttUtilitiesModule.h"
 
-FMqttRunnable::FMqttRunnable(UMqttClient* mqttClient)
-	: FRunnable()
-	, TaskQueue(new std::queue<FMqttTaskPtr>())
-	, TaskQueueLock(new FCriticalSection())
-	, client(mqttClient)
+FMqttRunnable::FMqttRunnable(UMqttClient* mqttClient, int updateDeltaMs) : FRunnable()
+	,iUpdateDeltaMs(updateDeltaMs)
+	,TaskQueue(new std::queue<FMqttTaskPtr>())
+	,TaskQueueLock(new FCriticalSection())
+	,client(mqttClient)
 {
 }
 
@@ -138,7 +138,7 @@ uint32 FMqttRunnable::Run()
 
 		TaskQueueLock->Unlock();
 
-		returnCode = connection.loop();
+		returnCode = connection.loop(iUpdateDeltaMs);
 
 		if (returnCode != MOSQ_ERR_SUCCESS)
 		{

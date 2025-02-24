@@ -19,5 +19,5 @@ struct MQTTUTILITIES_API FMqttConnectionData
 
 	/** Secure connection via TLS */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MQTT")
-	bool bUseTLS;
+	bool bUseTLS = false;
 };

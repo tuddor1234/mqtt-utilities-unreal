@@ -18,20 +18,20 @@ class UMqttClient : public UMqttClientBase
 	friend class FMqttRunnable;
 
 public:
-	void BeginDestroy() override;
+	virtual void BeginDestroy() override;
 
-	void Connect(FMqttConnectionData connectionData, const FOnConnectDelegate& onConnectCallback) override;
+	virtual void Connect(FMqttConnectionData connectionData, const FOnConnectDelegate& onConnectCallback) override;
 
-	void Disconnect(const FOnDisconnectDelegate& onDisconnectCallback) override;
+	virtual void Disconnect(const FOnDisconnectDelegate& onDisconnectCallback) override;
 
-	void Subscribe(FString topic, int qos) override;
+	virtual void Subscribe(FString topic, int qos) override;
 
-	void Unsubscribe(FString topic) override;
+	virtual void Unsubscribe(FString topic) override;
 
-	void Publish(FMqttMessage message) override;
+	virtual void Publish(FMqttMessage message) override;
 
 public:
-	void Init(FMqttClientConfig configData) override;
+	virtual void Init(FMqttClientConfig configData) override;
 
 private:
 	FMqttRunnable* Task;

@@ -16,7 +16,7 @@ public:
 	* Name of the certificate (with extension and base64 encoded) to use for connection validation.
 	*/
 	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Security | Desktop", Meta = (DisplayName = "Certificate Name"))
-	FString DesktopCertificateName = "broker.crt";
+	FString DesktopCertificateName = "letsencrypt-ca.pem";
 
 	/**
 	* Use custom security config. This will copy a certificate located in the Resources/AndroidCertificates folder of the plugin.

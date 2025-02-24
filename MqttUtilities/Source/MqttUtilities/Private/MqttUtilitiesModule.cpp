@@ -53,6 +53,21 @@ void FMqttUtilitiesModule::StartupModule()
 	FPlatformProcess::PopDllDirectory(*DLLPath);
 
 #endif
+
+#if PLATFORM_LINUX
+
+	const FString PluginDir = IPluginManager::Get().FindPlugin(TEXT("MqttUtilities"))->GetBaseDir();
+	const FString DLLPath = PluginDir / TEXT("Binaries/Linux/");
+
+	FPlatformProcess::PushDllDirectory(*DLLPath);
+
+	mDllHandleMosquitto = FPlatformProcess::GetDllHandle(*(DLLPath + "libmosquitto.so"));
+	mDllHandleMosquittopp = FPlatformProcess::GetDllHandle(*(DLLPath + "libmosquittopp.so"));
+
+	FPlatformProcess::PopDllDirectory(*DLLPath);
+
+#endif
+
 }
 
 void FMqttUtilitiesModule::ShutdownModule()
@@ -72,7 +87,7 @@ void FMqttUtilitiesModule::ShutdownModule()
 		MqttUtilitiesSettings = nullptr;
 	}
 
-#if PLATFORM_WINDOWS || PLATFORM_MAC
+#if PLATFORM_WINDOWS || PLATFORM_MAC || PLATFORM_LINUX
 
 	if (mDllHandleMosquitto)
 	{
