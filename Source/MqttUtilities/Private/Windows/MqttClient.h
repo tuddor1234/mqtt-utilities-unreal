@@ -2,12 +2,13 @@
 
 #pragma once
 
-#include "MqttClientBase.h"
 #include "CoreMinimal.h"
+#include "MqttClientBase.h"
 
 #include "MqttClient.generated.h"
 
 class FMqttRunnable;
+class FRunnableThread;
 
 UCLASS()
 class UMqttClient : public UMqttClientBase
@@ -17,25 +18,22 @@ class UMqttClient : public UMqttClientBase
 	friend class FMqttRunnable;
 
 public:
+	virtual void BeginDestroy() override;
 
-	void BeginDestroy() override;
+	virtual void Connect(FMqttConnectionData connectionData, const FOnConnectDelegate& onConnectCallback) override;
 
-	void Connect(FMqttConnectionData connectionData, const FOnConnectDelegate& onConnectCallback) override;
+	virtual void Disconnect(const FOnDisconnectDelegate& onDisconnectCallback) override;
 
-	void Disconnect(const FOnDisconnectDelegate& onDisconnectCallback) override;
+	virtual void Subscribe(FString topic, int qos) override;
 
-	void Subscribe(FString topic, int qos) override;
+	virtual void Unsubscribe(FString topic) override;
 
-	void Unsubscribe(FString topic) override;
-
-	void Publish(FMqttMessage message) override;
+	virtual void Publish(FMqttMessage message) override;
 
 public:
-
-	void Init(FMqttClientConfig configData) override;
+	virtual void Init(FMqttClientConfig configData) override;
 
 private:
-
 	FMqttRunnable* Task;
 	FRunnableThread* Thread;
 	FMqttClientConfig ClientConfig;

@@ -39,7 +39,7 @@ void UMqttClient::Connect(FMqttConnectionData connectionData, const FOnConnectDe
 	 * Runnable task stores thread-safe queue for output messages (subscribe, unsubscribe, publish)
 	 * and receives broker response that are redirected to client.
 	*/
-	
+
 	Task = new FMqttRunnable(this, ClientConfig.EventLoopDeltaMs);
 
 	Task->Host = std::string(TCHAR_TO_ANSI(*ClientConfig.HostUrl));

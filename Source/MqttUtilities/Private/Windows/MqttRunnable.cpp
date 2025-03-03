@@ -10,6 +10,8 @@
 #include "MqttUtilitiesSettings.h"
 #include "MqttUtilitiesModule.h"
 
+#include "Async/Async.h"
+
 FMqttRunnable::FMqttRunnable(UMqttClient* mqttClient, int updateDeltaMs) : FRunnable()
 	,iUpdateDeltaMs(updateDeltaMs)
 	,TaskQueue(new std::queue<FMqttTaskPtr>())
@@ -198,49 +200,52 @@ void FMqttRunnable::PushTask(FMqttTaskPtr task)
 
 void FMqttRunnable::OnConnect()
 {
-	AsyncTask(ENamedThreads::GameThread, [=]() {
+	AsyncTask(ENamedThreads::GameThread, [this]() {
 		client->OnConnectDelegate.ExecuteIfBound();
 	});
 }
 
 void FMqttRunnable::OnDisconnect()
 {
-	AsyncTask(ENamedThreads::GameThread, [=]() {
+	AsyncTask(ENamedThreads::GameThread, [this]() {
 		client->OnDisconnectDelegate.ExecuteIfBound();
 	});
 }
 
 void FMqttRunnable::OnPublished(int mid)
 {
-	AsyncTask(ENamedThreads::GameThread, [=]() {
+	AsyncTask(ENamedThreads::GameThread, [this, mid]() {
 		client->OnPublishDelegate.ExecuteIfBound(mid);
 	});
 }
 
 void FMqttRunnable::OnMessage(FMqttMessage message)
 {
-	AsyncTask(ENamedThreads::GameThread, [=]() {
+	AsyncTask(ENamedThreads::GameThread, [this, message]() {
 		client->OnMessageDelegate.ExecuteIfBound(message);
 	});
 }
 
 void FMqttRunnable::OnSubscribe(int mid, const TArray<int> qos)
 {
-	AsyncTask(ENamedThreads::GameThread, [=]() {
+	AsyncTask(ENamedThreads::GameThread, [this, mid, qos]() {
 		client->OnSubscribeDelegate.ExecuteIfBound(mid, qos);
-	});
+		});
 }
+
 
 void FMqttRunnable::OnUnsubscribe(int mid)
 {
-	AsyncTask(ENamedThreads::GameThread, [=]() {
+	AsyncTask(ENamedThreads::GameThread, [this, mid]() {
 		client->OnUnsubscribeDelegate.ExecuteIfBound(mid);
-	});
+		});
 }
+
 
 void FMqttRunnable::OnError(int errCode, FString message)
 {
-	AsyncTask(ENamedThreads::GameThread, [=]() {
+	AsyncTask(ENamedThreads::GameThread, [this, errCode, message]() {
 		client->OnErrorDelegate.ExecuteIfBound(errCode, message);
-	});
+		});
 }
+

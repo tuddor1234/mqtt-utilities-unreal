@@ -2,14 +2,17 @@
 
 #include "MqttClient.h"
 
-#include "MqttDelegate.h"
-#include "Utils/ConversionUtils.h"
-
 #include "Async/Async.h"
+#include "HAL/FileManager.h"
+#include "Misc/Paths.h"
+#include "MqttDelegate.h"
+#include "MqttUtilitiesSettings.h"
+#include "MqttUtilitiesModule.h"
+#include "Utils/ConversionUtils.h"
 
 UMqttClient::~UMqttClient()
 {
-	if(mqttSession != nil)
+	if (mqttSession != nil)
 	{
 		(MQTTSession*)CFBridgingRelease(mqttSession);
 		mqttSession = nil;
@@ -19,14 +22,62 @@ UMqttClient::~UMqttClient()
 void UMqttClient::Connect(FMqttConnectionData connectionData, const FOnConnectDelegate& onConnectCallback)
 {
 	OnConnectDelegate = onConnectCallback;
-	
+
+	if (connectionData.bUseTLS)
+	{
+		UMqttUtilitiesSettings* Settings = FMqttUtilitiesModule::Get().GetSettings();
+
+		MQTTSSLPinningMode Mode = Settings->UseCertificatePinning ? MQTTSSLPinningModeCertificate : MQTTSSLPinningModeNone;
+		MQTTSSLSecurityPolicy* securityPolicy = [MQTTSSLSecurityPolicy policyWithPinningMode:Mode];
+		if (Settings->UseCertificatePinning)
+		{
+			// Certificate must be DER encoded
+			FString CertificatePath = FPaths::ProjectContentDir();
+			CertificatePath /= "Certificates";
+			CertificatePath /= Settings->IOSCertificateName;
+			CertificatePath = IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*CertificatePath);
+
+			if (IFileManager::Get().FileExists(*CertificatePath))
+			{
+				UE_LOG(LogTemp, Verbose, TEXT("MQTT => Pinning certificate: %s"), *CertificatePath);
+
+				securityPolicy.pinnedCertificates = @[[NSData dataWithContentsOfFile:CertificatePath.GetNSString()]];
+			}
+			else
+			{
+				UE_LOG(LogTemp, Error, TEXT("MQTT => Could not find certificate bundle at: %s"), *CertificatePath);
+			}
+		}
+
+		securityPolicy.allowInvalidCertificates = Settings->AllowInvalidCertificates;
+		securityPolicy.validatesCertificateChain = Settings->ValidatesCertificateChain;
+		securityPolicy.validatesDomainName = Settings->ValidatesDomainName;
+		
+		MQTTSSLSecurityPolicyTransport* transport = [[MQTTSSLSecurityPolicyTransport alloc] init];
+		transport.host = config.HostUrl.GetNSString();
+		transport.port = config.Port;
+		transport.tls = YES;
+		transport.securityPolicy = securityPolicy;
+		
+		mqttSession.transport = transport;
+	}
+	else
+	{
+		MQTTCFSocketTransport* transport = [[MQTTCFSocketTransport alloc] init];
+		transport.host = config.HostUrl.GetNSString();
+		transport.port = config.Port;
+		mqttSession.transport = transport;
+	}
+
 	mqttSession.password = connectionData.Password.GetNSString();
 	mqttSession.userName = connectionData.Login.GetNSString();
 
-	[mqttSession connectWithConnectHandler:^(NSError *error) {
-		if (error) {
+	[mqttSession connectWithConnectHandler:^(NSError* error) {
+		if (error)
+		{
 			int errCode = error.code;
 			FString errMsg = FString(error.localizedDescription);
+			UE_LOG(LogTemp, Error, TEXT("MQTT => Connect Error %d: %s"), errCode, *errMsg);
 			AsyncTask(ENamedThreads::GameThread, [=]() {
 				OnErrorDelegate.ExecuteIfBound(errCode, errMsg);
 			});
@@ -37,59 +88,67 @@ void UMqttClient::Connect(FMqttConnectionData connectionData, const FOnConnectDe
 void UMqttClient::Disconnect(const FOnDisconnectDelegate& onDisconnectCallback)
 {
 	OnDisconnectDelegate = onDisconnectCallback;
-	
+
 	[mqttSession disconnect];
 }
 
 void UMqttClient::Subscribe(FString topic, int qos)
 {
-	[mqttSession subscribeToTopic:topic.GetNSString() atLevel:ConversionUtils::ConvertIntToQosLevel(qos) subscribeHandler:^(NSError *error, NSArray<NSNumber *> *gQoss) {
-		if (error) {
-			int errCode = error.code;
-			FString errMsg = FString(error.localizedDescription);
-			AsyncTask(ENamedThreads::GameThread, [=]() {
-				OnErrorDelegate.ExecuteIfBound(errCode, errMsg);
-			});
-		}
- 	}];
+	[mqttSession subscribeToTopic:topic.GetNSString()
+						  atLevel:ConversionUtils::ConvertIntToQosLevel(qos)
+				 subscribeHandler:^(NSError* error, NSArray<NSNumber*>* gQoss) {
+					 if (error)
+					 {
+						 int errCode = error.code;
+						 FString errMsg = FString(error.localizedDescription);
+						 UE_LOG(LogTemp, Error, TEXT("MQTT => Sub Error %d: %s"), errCode, *errMsg);
+						 AsyncTask(ENamedThreads::GameThread, [=]() {
+							 OnErrorDelegate.ExecuteIfBound(errCode, errMsg);
+						 });
+					 }
+				 }];
 }
 
 void UMqttClient::Unsubscribe(FString topic)
 {
-	[mqttSession unsubscribeTopic:topic.GetNSString() unsubscribeHandler:^(NSError *error) {
-		if (error) {
-			int errCode = error.code;
-			FString errMsg = FString(error.localizedDescription);
-			AsyncTask(ENamedThreads::GameThread, [=]() {
-				OnErrorDelegate.ExecuteIfBound(errCode, errMsg);
-			});
-		}
-	}];
+	[mqttSession unsubscribeTopic:topic.GetNSString()
+			   unsubscribeHandler:^(NSError* error) {
+				   if (error)
+				   {
+					   int errCode = error.code;
+					   FString errMsg = FString(error.localizedDescription);
+					   UE_LOG(LogTemp, Error, TEXT("MQTT => Unsub Error %d: %s"), errCode, *errMsg);
+					   AsyncTask(ENamedThreads::GameThread, [=]() {
+						   OnErrorDelegate.ExecuteIfBound(errCode, errMsg);
+					   });
+				   }
+			   }];
 }
 
 void UMqttClient::Publish(FMqttMessage message)
 {
-	[mqttSession publishData:[message.Message.GetNSString() dataUsingEncoding:NSUTF8StringEncoding] onTopic:message.Topic.GetNSString() 
-		retain:message.Retain qos:ConversionUtils::ConvertIntToQosLevel(message.Qos)
-		publishHandler:^(NSError *error) {
-		if (error) {
-			int errCode = error.code;
-			FString errMsg = FString(error.localizedDescription);
-			AsyncTask(ENamedThreads::GameThread, [=]() {
-				OnErrorDelegate.ExecuteIfBound(errCode, errMsg);
-			});
-		}
-	}];
+	[mqttSession publishData:[message.Message.GetNSString() dataUsingEncoding:NSUTF8StringEncoding]
+					 onTopic:message.Topic.GetNSString()
+					  retain:message.Retain
+						 qos:ConversionUtils::ConvertIntToQosLevel(message.Qos)
+			  publishHandler:^(NSError* error) {
+				  if (error)
+				  {
+					  int errCode = error.code;
+					  FString errMsg = FString(error.localizedDescription);
+					  UE_LOG(LogTemp, Error, TEXT("MQTT => Publish Error %d: %s"), errCode, *errMsg);
+					  AsyncTask(ENamedThreads::GameThread, [=]() {
+						  OnErrorDelegate.ExecuteIfBound(errCode, errMsg);
+					  });
+				  }
+			  }];
 }
 
 void UMqttClient::Init(FMqttClientConfig configData)
 {
-	MQTTCFSocketTransport *transport = [[MQTTCFSocketTransport alloc] init];
-	transport.host = configData.HostUrl.GetNSString();
-	transport.port = configData.Port;
-		
+	config = configData;
+
 	MQTTSession* session = [[MQTTSession alloc] init];
-	session.transport = transport;
 	session.clientId = configData.ClientId.GetNSString();
 
 	MqttDelegate* mqttDelegate = [[MqttDelegate alloc] init];
