@@ -62,9 +62,10 @@ uint32 FMqttRunnable::Run()
 		PemCertBundlePath /= "Certificates";
 		PemCertBundlePath /= Settings->DesktopCertificateName;
 		PemCertBundlePath = IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*PemCertBundlePath);
-
+        
 		if (IFileManager::Get().FileExists(*PemCertBundlePath))
 		{
+          
 			returnCode = connection.tls_set(TCHAR_TO_ANSI(*PemCertBundlePath));
 			if (returnCode != MOSQ_ERR_SUCCESS)
 			{
@@ -198,49 +199,49 @@ void FMqttRunnable::PushTask(FMqttTaskPtr task)
 
 void FMqttRunnable::OnConnect()
 {
-	AsyncTask(ENamedThreads::GameThread, [=]() {
+	AsyncTask(ENamedThreads::GameThread, [this]() {
 		client->OnConnectDelegate.ExecuteIfBound();
 	});
 }
 
 void FMqttRunnable::OnDisconnect()
 {
-	AsyncTask(ENamedThreads::GameThread, [=]() {
+	AsyncTask(ENamedThreads::GameThread, [this]() {
 		client->OnDisconnectDelegate.ExecuteIfBound();
 	});
 }
 
 void FMqttRunnable::OnPublished(int mid)
 {
-	AsyncTask(ENamedThreads::GameThread, [=]() {
+	AsyncTask(ENamedThreads::GameThread, [this,mid]() {
 		client->OnPublishDelegate.ExecuteIfBound(mid);
 	});
 }
 
 void FMqttRunnable::OnMessage(FMqttMessage message)
 {
-	AsyncTask(ENamedThreads::GameThread, [=]() {
+	AsyncTask(ENamedThreads::GameThread, [this,message]() {
 		client->OnMessageDelegate.ExecuteIfBound(message);
 	});
 }
 
 void FMqttRunnable::OnSubscribe(int mid, const TArray<int> qos)
 {
-	AsyncTask(ENamedThreads::GameThread, [=]() {
+	AsyncTask(ENamedThreads::GameThread, [this,mid, qos]() {
 		client->OnSubscribeDelegate.ExecuteIfBound(mid, qos);
 	});
 }
 
 void FMqttRunnable::OnUnsubscribe(int mid)
 {
-	AsyncTask(ENamedThreads::GameThread, [=]() {
+	AsyncTask(ENamedThreads::GameThread, [this,mid]() {
 		client->OnUnsubscribeDelegate.ExecuteIfBound(mid);
 	});
 }
 
 void FMqttRunnable::OnError(int errCode, FString message)
 {
-	AsyncTask(ENamedThreads::GameThread, [=]() {
+	AsyncTask(ENamedThreads::GameThread, [this,errCode, message]() {
 		client->OnErrorDelegate.ExecuteIfBound(errCode, message);
 	});
 }

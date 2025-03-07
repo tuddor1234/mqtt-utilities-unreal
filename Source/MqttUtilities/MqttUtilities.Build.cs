@@ -67,16 +67,20 @@ public class MqttUtilities : ModuleRules
 			PrivateIncludePaths.Add(Path.Combine(ModuleDirectory, "Private/Mac"));
 			PrivateIncludePaths.Add(Path.Combine(MosquittoLibPath, "includes"));
 
-			PublicDelayLoadDLLs.Add(Path.Combine(MosquittoLibPath, "mosquitto.dylib"));
-			PublicDelayLoadDLLs.Add(Path.Combine(MosquittoLibPath, "mosquittopp.dylib"));
+			PublicDelayLoadDLLs.Add(Path.Combine(MosquittoLibPath, "libmosquitto.2.0.20.dylib"));
+			PublicDelayLoadDLLs.Add(Path.Combine(MosquittoLibPath, "libmosquittopp.2.0.20.dylib"));
 
-			RuntimeDependencies.Add("$(BinaryOutputDir)/mosquitto.dylib",
-				Path.Combine(MosquittoLibPath, "mosquitto.dylib"));
-			RuntimeDependencies.Add("$(BinaryOutputDir)/mosquittopp.dylib",
-				Path.Combine(MosquittoLibPath, "mosquittopp.dylib"));
-			RuntimeDependencies.Add("$(BinaryOutputDir)/libssl.dylib", Path.Combine(MosquittoLibPath, "libssl.dylib"));
-			RuntimeDependencies.Add("$(BinaryOutputDir)/libcrypto.dylib",
-				Path.Combine(MosquittoLibPath, "libcrypto.dylib"));
+			RuntimeDependencies.Add("$(BinaryOutputDir)/libmosquitto.2.0.20.dylib",
+				Path.Combine(MosquittoLibPath, "libmosquitto.2.0.20.dylib"));
+			RuntimeDependencies.Add("$(BinaryOutputDir)/libmosquittopp.2.0.20.dylib",
+				Path.Combine(MosquittoLibPath, "libmosquittopp.2.0.20.dylib"));
+			RuntimeDependencies.Add("$(BinaryOutputDir)/libssl.3.dylib", Path.Combine(MosquittoLibPath, "libssl.3.dylib"));
+			
+			RuntimeDependencies.Add("$(BinaryOutputDir)/libcrypto.3.dylib",
+				Path.Combine(MosquittoLibPath, "libcrypto.3.dylib"));	
+			
+			RuntimeDependencies.Add("$(BinaryOutputDir)/libtls.31.dylib",
+				Path.Combine(MosquittoLibPath, "libtls.31.dylib"));
 		}
 
 		// Additional routine for iOS
